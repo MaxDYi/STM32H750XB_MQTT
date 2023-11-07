@@ -27,19 +27,30 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
-
-#include "lwip/opt.h"
-#include "lwip/arch.h"
-#include "lwip/api.h"
-#include "lwip/inet.h"
-#include "lwip/sockets.h"
 #include "lwip/apps/mqtt.h"
+#include "lwip/apps/mqtt_priv.h"
+#include "lwip/timeouts.h"
+#include "lwip/ip_addr.h"
+#include "lwip/mem.h"
+#include "lwip/err.h"
+#include "lwip/pbuf.h"
+#include "lwip/altcp.h"
+#include "lwip/altcp_tcp.h"
+#include "lwip/altcp_tls.h"
 #include "mqttclient.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define MQTT_CLIENT_ID "MQTT_CLIENT"
+#define MQTT_HOST_IP "152.136.55.68"
+#define MQTT_HOST_PORT 1883
+#define MQTT_HOST_USER "gywang"
+#define MQTT_HOST_PASS "wgy123456!"
 
+#define QOS0 0
+#define QOS1 1
+#define QOS2 2
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -61,151 +72,34 @@ osThreadId task_LEDHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-void example_do_connect(mqtt_client_t *client);
-static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status);
-static void mqtt_sub_request_cb(void *arg, err_t result);
-static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len);
-static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags);
-void example_publish(mqtt_client_t *client, void *arg);
-static void mqtt_pub_request_cb(void *arg, err_t result);
 
-void example_do_connect(mqtt_client_t *client)
+void MQTT_Connect_Request_Callback(mqtt_client_t *client, void *arg, mqtt_connection_status_t status)
 {
-    struct mqtt_connect_client_info_t ci;
-    err_t err;
-
-    /* Setup an empty client info structure */
-    memset(&ci, 0, sizeof(ci));
-
-    /* Minimal amount of information required is client identifier, so set it here */
-    ci.client_id = "lwip_test";
-    ci.client_user = "gywang";
-    ci.client_pass = "wgy123456!";
-    /* Initiate client and connect to server, if this fails immediately an error code is returned
-       otherwise mqtt_connection_cb will be called with connection result after attempting
-       to establish a connection with the server.
-       For now MQTT version 3.1.1 is always used */
-    ip_addr_t ip_addr;
-    IP4_ADDR(&ip_addr, 152, 136, 55, 68);
-    // IP4_ADDR(&ip_addr, 192, 168, 68, 188);
-    err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, 0, &ci);
-
-    /* For now just print the result code if something goes wrong */
-    if (err != ERR_OK)
-    {
-        printf("mqtt_connect return %d\n", err);
-    }
-}
-
-static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status)
-{
-    err_t err;
     if (status == MQTT_CONNECT_ACCEPTED)
     {
-        printf("mqtt_connection_cb: Successfully connected\n");
-
-        /* Setup callback for incoming publish requests */
-        mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
-
-        /* Subscribe to a topic named "subtopic" with QoS level 1, call mqtt_sub_request_cb with result */
-        err = mqtt_subscribe(client, "test", 1, mqtt_sub_request_cb, arg);
-
-        if (err != ERR_OK)
-        {
-            printf("mqtt_subscribe return: %d\n", err);
-        }
+        mqtt_set_inpub_callback(client, MQTT_Topic_Callback, MQTT_Data_Callback, arg);
     }
     else
     {
-        printf("mqtt_connection_cb: Disconnected, reason: %d\n", status);
-
-        /* Its more nice to be connected, so try to reconnect */
-        example_do_connect(client);
+        MQTT_Connect(client, MQTT_HOST_IP, MQTT_HOST_PORT, MQTT_CLIENT_ID,
+                     MQTT_HOST_USER, MQTT_HOST_PASS, MQTT_Connect_Request_Callback);
     }
 }
 
-static void mqtt_sub_request_cb(void *arg, err_t result)
+void MQTT_Topic_Callback(void *arg, const char *topic, u32_t tot_len)
 {
-    /* Just print the result code here for simplicity,
-       normal behaviour would be to take some action if subscribe fails like
-       notifying user, retry subscribe or disconnect from server */
-    printf("Subscribe result: %d\n", result);
-}
-
-static int inpub_id;
-static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len)
-{
-    printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
-
-    /* Decode topic string into a user defined reference */
-    if (strcmp(topic, "print_payload") == 0)
+    printf("MQTT_Topic_Callback: %s\r\n", topic);
+    if (strcmp(topic, "test") == 0)
     {
-        inpub_id = 0;
     }
-    else if (topic[0] == 'A')
+    else if (strcmp(topic, "LED") == 0)
     {
-        /* All topics starting with 'A' might be handled at the same way */
-        inpub_id = 1;
-    }
-    else
-    {
-        /* For all other topics */
-        inpub_id = 2;
     }
 }
 
-static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags)
+void MQTT_Data_Callback(void *arg, const u8_t *data, u16_t len, u8_t flags)
 {
-    printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
-
-    if (flags & MQTT_DATA_FLAG_LAST)
-    {
-        /* Last fragment of payload received (or whole part if payload fits receive buffer
-           See MQTT_VAR_HEADER_BUFFER_LEN)  */
-
-        /* Call function or do action depending on reference, in this case inpub_id */
-        if (inpub_id == 0)
-        {
-            /* Don't trust the publisher, check zero termination */
-            if (data[len - 1] == 0)
-            {
-                printf("mqtt_incoming_data_cb: %s\n", (const char *)data);
-            }
-        }
-        else if (inpub_id == 1)
-        {
-            /* Call an 'A' function... */
-        }
-        else
-        {
-            printf("mqtt_incoming_data_cb: Ignoring payload...\n");
-        }
-    }
-    else
-    {
-        /* Handle fragmented payload, store in buffer, write to file or whatever */
-    }
-}
-
-void example_publish(mqtt_client_t *client, void *arg)
-{
-    const char *pub_payload = "PubSubHubLubJub";
-    err_t err;
-    uint8_t qos = 1;    /* 0 1 or 2, see MQTT specification */
-    uint8_t retain = 0; /* No don't retain such crappy payload... */
-    err = mqtt_publish(client, "test", pub_payload, strlen(pub_payload), qos, retain, mqtt_pub_request_cb, arg);
-    if (err != ERR_OK)
-    {
-        printf("Publish err: %d\n", err);
-    }
-}
-
-static void mqtt_pub_request_cb(void *arg, err_t result)
-{
-    if (result != ERR_OK)
-    {
-        printf("Publish result: %d\n", result);
-    }
+    printf("MQTT_Data_Callback: %s\r\n", data);
 }
 
 /* USER CODE END FunctionPrototypes */
@@ -285,13 +179,26 @@ void Task_Default(void const *argument)
     /* init code for LWIP */
     MX_LWIP_Init();
     /* USER CODE BEGIN Task_Default */
-    mqtt_client_t static_client;
-    static_client.conn_state = 0;
-    example_do_connect(&static_client);
+    mqtt_client_t *mqttClient = mqtt_client_new();
+    if (mqttClient != NULL)
+    {
+        err_t err;
+        err = MQTT_Connect(mqttClient, MQTT_HOST_IP, MQTT_HOST_PORT, MQTT_CLIENT_ID,
+                           MQTT_HOST_USER, MQTT_HOST_PASS, MQTT_Connect_Request_Callback);
+        if (err == ERR_OK)
+        {
+
+            MQTT_Subscribe(mqttClient, "LED", QOS1, NULL);
+        }
+        else
+        {
+        }
+    }
+
     /* Infinite loop */
     for (;;)
     {
-        example_publish(&static_client, (void *)mqtt_pub_request_cb);
+        MQTT_Publish(mqttClient, "test", "hello", QOS1, 0, NULL);
         osDelay(1000);
     }
     /* USER CODE END Task_Default */

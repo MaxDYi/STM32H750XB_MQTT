@@ -1,68 +1,52 @@
 #include "mqttclient.h"
 
-#define MQTT_DEBUG 1
-
-#define MQTT_CLIENT_ID "MQTT_CLIENT"
-#define MQTT_HOST_IP "152.136.55.68"
-#define MQTT_HOST_PORT 1883
-#define MQTT_HOST_USER "gywang"
-#define MQTT_HOST_PASS "wgy123456!"
-
-mqtt_client_t *MqttClient;
-
-void MQTT_Init(mqtt_client_t *client)
+// 将字符串格式IPV4地址转变为数组
+void str_to_ip(char *str, uint8_t *ip)
 {
-
+    char *str_temp = strtok(str, ".");
+    int i = 0;
+    while (str_temp)
+    {
+        ip[i] = atoi(str_temp);
+        str_temp = strtok(NULL, ".");
+        i++;
+    }
 }
 
-void MQTT_Connect(mqtt_client_t *client)
+err_t MQTT_Connect(mqtt_client_t *client, char *hostIP, uint16_t hostPort, char *clientID, char *clientUser, char *clientPass, mqtt_connection_cb_t cb)
 {
+    struct mqtt_connect_client_info_t clientInfo;
+    err_t err;
+    memset(&clientInfo, 0, sizeof(clientInfo));
+    clientInfo.client_id = clientID;
+    clientInfo.client_user = clientUser;
+    clientInfo.client_pass = clientPass;
 
+    uint8_t IPV4[4];
+    str_to_ip(hostIP, IPV4);
+
+    ip_addr_t ip_addr;
+    IP4_ADDR(&ip_addr, IPV4[0], IPV4[1], IPV4[2], IPV4[3]);
+
+    err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, cb, 0, &clientInfo);
+    return err;
 }
 
-void MQTT_PrintError(int err)
+err_t MQTT_Publish(mqtt_client_t *client, char *topic, char *data, uint8_t qos, uint8_t retain, mqtt_request_cb_t cb)
 {
-    switch (err)
-    {
-    case (ERR_OK):
-    {
-        printf("MQTT OK\r\n");
-        break;
-    }
-    case (ERR_MEM):
-    {
-        printf("MQTT ERR_MEM\r\n");
-        break;
-    }
-    case (ERR_BUF):
-    {
-        printf("MQTT ERR_BUF\r\n");
-        break;
-    }
-    case (ERR_TIMEOUT):
-    {
-        printf("MQTT ERR_TIMEOUT\r\n");
-        break;
-    }
-    case (ERR_RTE):
-    {
-        printf("MQTT ERR_RTE\r\n");
-        break;
-    }
-    case (ERR_INPROGRESS):
-    {
-        printf("MQTT ERR_INPROGRESS\r\n");
-        break;
-    }
-    case (ERR_VAL):
-    {
-        printf("MQTT ERR_VAL\r\n");
-        break;
-    }
-    default:
-    {
-        printf("MQTT ERR_UNKNOWN\r\n");
-        break;
-    }
-    }
+    err_t err;
+    err = mqtt_publish(client, topic, data, strlen(data), qos, retain, cb, (void *)cb);
+    return err;
+}
+
+err_t MQTT_Subscribe(mqtt_client_t *client, char *topic, uint8_t qos, mqtt_request_cb_t cb)
+{
+    err_t err;
+    err = mqtt_subscribe(client, topic, qos, cb, (void *)cb);
+    return err;
+}
+
+void MQTT_Disconnect(mqtt_client_t *client)
+{
+    mqtt_disconnect(client);
 }
