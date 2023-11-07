@@ -33,11 +33,12 @@
 #include "lwip/api.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
+#include "lwip/apps/mqtt.h"
+#include "mqttclient.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-// MQTT Settings
 
 /* USER CODE END PTD */
 
@@ -57,18 +58,160 @@
 /* USER CODE END Variables */
 osThreadId task_DefaultHandle;
 osThreadId task_LEDHandle;
-osThreadId task_MQTT_RecvHandle;
-osThreadId task_MQTT_SendHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+void example_do_connect(mqtt_client_t *client);
+static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status);
+static void mqtt_sub_request_cb(void *arg, err_t result);
+static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len);
+static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags);
+void example_publish(mqtt_client_t *client, void *arg);
+static void mqtt_pub_request_cb(void *arg, err_t result);
+
+void example_do_connect(mqtt_client_t *client)
+{
+    struct mqtt_connect_client_info_t ci;
+    err_t err;
+
+    /* Setup an empty client info structure */
+    memset(&ci, 0, sizeof(ci));
+
+    /* Minimal amount of information required is client identifier, so set it here */
+    ci.client_id = "lwip_test";
+    ci.client_user = "gywang";
+    ci.client_pass = "wgy123456!";
+    /* Initiate client and connect to server, if this fails immediately an error code is returned
+       otherwise mqtt_connection_cb will be called with connection result after attempting
+       to establish a connection with the server.
+       For now MQTT version 3.1.1 is always used */
+    ip_addr_t ip_addr;
+    IP4_ADDR(&ip_addr, 152, 136, 55, 68);
+    // IP4_ADDR(&ip_addr, 192, 168, 68, 188);
+    err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, 0, &ci);
+
+    /* For now just print the result code if something goes wrong */
+    if (err != ERR_OK)
+    {
+        printf("mqtt_connect return %d\n", err);
+    }
+}
+
+static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status)
+{
+    err_t err;
+    if (status == MQTT_CONNECT_ACCEPTED)
+    {
+        printf("mqtt_connection_cb: Successfully connected\n");
+
+        /* Setup callback for incoming publish requests */
+        mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
+
+        /* Subscribe to a topic named "subtopic" with QoS level 1, call mqtt_sub_request_cb with result */
+        err = mqtt_subscribe(client, "test", 1, mqtt_sub_request_cb, arg);
+
+        if (err != ERR_OK)
+        {
+            printf("mqtt_subscribe return: %d\n", err);
+        }
+    }
+    else
+    {
+        printf("mqtt_connection_cb: Disconnected, reason: %d\n", status);
+
+        /* Its more nice to be connected, so try to reconnect */
+        example_do_connect(client);
+    }
+}
+
+static void mqtt_sub_request_cb(void *arg, err_t result)
+{
+    /* Just print the result code here for simplicity,
+       normal behaviour would be to take some action if subscribe fails like
+       notifying user, retry subscribe or disconnect from server */
+    printf("Subscribe result: %d\n", result);
+}
+
+static int inpub_id;
+static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len)
+{
+    printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
+
+    /* Decode topic string into a user defined reference */
+    if (strcmp(topic, "print_payload") == 0)
+    {
+        inpub_id = 0;
+    }
+    else if (topic[0] == 'A')
+    {
+        /* All topics starting with 'A' might be handled at the same way */
+        inpub_id = 1;
+    }
+    else
+    {
+        /* For all other topics */
+        inpub_id = 2;
+    }
+}
+
+static void mqtt_incoming_data_cb(void *arg, const uint8_t *data, uint16_t len, uint8_t flags)
+{
+    printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
+
+    if (flags & MQTT_DATA_FLAG_LAST)
+    {
+        /* Last fragment of payload received (or whole part if payload fits receive buffer
+           See MQTT_VAR_HEADER_BUFFER_LEN)  */
+
+        /* Call function or do action depending on reference, in this case inpub_id */
+        if (inpub_id == 0)
+        {
+            /* Don't trust the publisher, check zero termination */
+            if (data[len - 1] == 0)
+            {
+                printf("mqtt_incoming_data_cb: %s\n", (const char *)data);
+            }
+        }
+        else if (inpub_id == 1)
+        {
+            /* Call an 'A' function... */
+        }
+        else
+        {
+            printf("mqtt_incoming_data_cb: Ignoring payload...\n");
+        }
+    }
+    else
+    {
+        /* Handle fragmented payload, store in buffer, write to file or whatever */
+    }
+}
+
+void example_publish(mqtt_client_t *client, void *arg)
+{
+    const char *pub_payload = "PubSubHubLubJub";
+    err_t err;
+    uint8_t qos = 1;    /* 0 1 or 2, see MQTT specification */
+    uint8_t retain = 0; /* No don't retain such crappy payload... */
+    err = mqtt_publish(client, "test", pub_payload, strlen(pub_payload), qos, retain, mqtt_pub_request_cb, arg);
+    if (err != ERR_OK)
+    {
+        printf("Publish err: %d\n", err);
+    }
+}
+
+static void mqtt_pub_request_cb(void *arg, err_t result)
+{
+    if (result != ERR_OK)
+    {
+        printf("Publish result: %d\n", result);
+    }
+}
 
 /* USER CODE END FunctionPrototypes */
 
 void Task_Default(void const *argument);
 void Task_LED(void const *argument);
-void Task_MQTT_Receiver(void const *argument);
-void Task_MQTT_Send(void const *argument);
 
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -125,14 +268,6 @@ void MX_FREERTOS_Init(void)
     osThreadDef(task_LED, Task_LED, osPriorityIdle, 0, 128);
     task_LEDHandle = osThreadCreate(osThread(task_LED), NULL);
 
-    /* definition and creation of task_MQTT_Recv */
-    osThreadDef(task_MQTT_Recv, Task_MQTT_Receiver, osPriorityIdle, 0, 512);
-    task_MQTT_RecvHandle = osThreadCreate(osThread(task_MQTT_Recv), NULL);
-
-    /* definition and creation of task_MQTT_Send */
-    osThreadDef(task_MQTT_Send, Task_MQTT_Send, osPriorityIdle, 0, 512);
-    task_MQTT_SendHandle = osThreadCreate(osThread(task_MQTT_Send), NULL);
-
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
@@ -150,10 +285,14 @@ void Task_Default(void const *argument)
     /* init code for LWIP */
     MX_LWIP_Init();
     /* USER CODE BEGIN Task_Default */
+    mqtt_client_t static_client;
+    static_client.conn_state = 0;
+    example_do_connect(&static_client);
     /* Infinite loop */
     for (;;)
     {
-        osDelay(1);
+        example_publish(&static_client, (void *)mqtt_pub_request_cb);
+        osDelay(1000);
     }
     /* USER CODE END Task_Default */
 }
@@ -171,48 +310,10 @@ void Task_LED(void const *argument)
     /* Infinite loop */
     for (;;)
     {
-        // HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+        HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
         osDelay(500);
     }
     /* USER CODE END Task_LED */
-}
-
-/* USER CODE BEGIN Header_Task_MQTT_Receiver */
-/**
- * @brief Function implementing the task_MQTT_Recv thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_Task_MQTT_Receiver */
-void Task_MQTT_Receiver(void const *argument)
-{
-    /* USER CODE BEGIN Task_MQTT_Receiver */
-
-    /* Infinite loop */
-    for (;;)
-    {
-        osDelay(100);
-    }
-    /* USER CODE END Task_MQTT_Receiver */
-}
-
-/* USER CODE BEGIN Header_Task_MQTT_Send */
-/**
- * @brief Function implementing the task_MQTT_Send thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_Task_MQTT_Send */
-void Task_MQTT_Send(void const *argument)
-{
-    /* USER CODE BEGIN Task_MQTT_Send */
-
-    /* Infinite loop */
-    for (;;)
-    {
-        osDelay(1);
-    }
-    /* USER CODE END Task_MQTT_Send */
 }
 
 /* Private application code --------------------------------------------------*/

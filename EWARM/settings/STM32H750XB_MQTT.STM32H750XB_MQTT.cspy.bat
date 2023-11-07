@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --backend -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --backend -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" "--debug_file=%~1" --backend -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" "--debug_file=%~1" --backend -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
 
 @echo off 
 :end

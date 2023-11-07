@@ -2,7 +2,7 @@
 
 "C:\Program Files\IAR Systems\Embedded Workbench 9.1\arm\bin\armSTLINK.dll" 
 
-"E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\STM32H750XB_MQTT\Exe\STM32H750XB_MQTT.out" 
+"E:\STM32H750XB_MQTT\EWARM\STM32H750XB_MQTT\Exe\STM32H750XB_MQTT.out" 
 
 --plugin="C:\Program Files\IAR Systems\Embedded Workbench 9.1\arm\bin\armbat.dll" 
 

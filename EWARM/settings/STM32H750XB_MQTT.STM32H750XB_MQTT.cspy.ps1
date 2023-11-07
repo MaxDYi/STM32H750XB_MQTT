@@ -23,9 +23,9 @@
 
 if ($debugfile -eq "")
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --backend -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --backend -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
 }
 else
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --debug_file=$debugfile --backend -f "E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.1\common\bin\cspybat" -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.general.xcl" --debug_file=$debugfile --backend -f "E:\STM32H750XB_MQTT\EWARM\settings\STM32H750XB_MQTT.STM32H750XB_MQTT.driver.xcl" 
 }

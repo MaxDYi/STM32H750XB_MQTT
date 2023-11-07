@@ -1,5 +1,13 @@
 {
-    "files.associations": {
-        "stdio.h": "c"
-    }
+  "files.associations": {
+    "stdio.h": "c",
+    "arch.h": "c",
+    "usart.h": "c",
+    "mqtt.h": "c",
+    "mqttclient.h": "c",
+    "mem.h": "c",
+    "err.h": "c",
+    "altcp.h": "c",
+    "ip_addr.h": "c"
+}
 }

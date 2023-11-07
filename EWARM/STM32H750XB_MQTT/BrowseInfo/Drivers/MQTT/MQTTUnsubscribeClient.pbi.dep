@@ -1,12 +1,12 @@
-E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\EWARM\STM32H750XB_MQTT\BrowseInfo\Drivers\MQTT\MQTTUnsubscribeClient.pbi: \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTUnsubscribeClient.c \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTPacket.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTConnect.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTPublish.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTSubscribe.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTUnsubscribe.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\MQTTFormat.h \
-  E:\STM32H750XB_MQTT\Frimware\STM32H750XB_MQTT\Drivers\MQTT\StackTrace.h \
+E:\STM32H750XB_MQTT\EWARM\STM32H750XB_MQTT\BrowseInfo\Drivers\MQTT\MQTTUnsubscribeClient.pbi: \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTUnsubscribeClient.c \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTPacket.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTConnect.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTPublish.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTSubscribe.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTUnsubscribe.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\MQTTFormat.h \
+  E:\STM32H750XB_MQTT\Drivers\MQTT\StackTrace.h \
   C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\stdio.h \
   C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\ycheck.h \
   C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\yvals.h \

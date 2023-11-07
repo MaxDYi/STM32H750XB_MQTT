@@ -1456,6 +1456,9 @@
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\usart.c</name>
                 </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\write.c</name>
+                </file>
             </group>
             <group>
                 <name>LWIP</name>
@@ -1501,39 +1504,6 @@
             <name>MQTT</name>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\MQTT\mqttclient.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTConnectClient.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTConnectServer.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTDeserializePublish.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTFormat.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTPacket.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTSerializePublish.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTSubscribeClient.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTSubscribeServer.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTUnsubscribeClient.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\MQTTUnsubscribeServer.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\Drivers\MQTT\transport.c</name>
             </file>
         </group>
         <group>
